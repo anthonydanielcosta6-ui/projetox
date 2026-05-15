@@ -1,73 +1,226 @@
 <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>X</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:#000;
+  color:white;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.container{
+  width:400px;
+  background:#111;
+  border:1px solid #222;
+  border-radius:20px;
+  padding:40px;
+}
+
+.logo{
+  font-size:60px;
+  text-align:center;
+  margin-bottom:20px;
+  font-weight:bold;
+}
+
+h1{
+  text-align:center;
+  margin-bottom:25px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  margin-bottom:15px;
+  border:none;
+  border-radius:999px;
+  background:#222;
+  color:white;
+  font-size:16px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:999px;
+  background:white;
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+button:hover{
+  opacity:0.9;
+}
+
+.switch{
+  text-align:center;
+  margin-top:20px;
+  color:#888;
+  cursor:pointer;
+}
+
+.message{
+  margin-top:15px;
+  text-align:center;
+}
+
+.home{
+  display:none;
+  text-align:center;
+}
+
+</style>
+</head>
+
 <body>
 
-  <div class="container">
-    <div class="logo">X</div>
+<div class="container">
 
-    <h1>Entrar no X</h1>
+<div id="auth">
 
-    <div
-      id="g_id_onload"
-      data-client_id="SEU_CLIENT_ID_GOOGLE"
-      data-callback="handleCredentialResponse">
-    </div>
+<div class="logo">X</div>
 
-    <div
-      class="g_id_signin"
-      data-type="standard"
-      data-size="large"
-      data-theme="filled_black"
-      data-text="signin_with"
-      data-shape="pill"
-      data-logo_alignment="left">
-    </div>
+<h1 id="title">Entrar no X</h1>
 
-    <div class="success" id="success">
-      Login realizado.
-    </div>
+<input type="text" id="username" placeholder="Username" style="display:none">
 
-    <div class="info" id="info"></div>
-  </div>
+<input type="email" id="email" placeholder="Email">
 
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhS6_2o0Nobuc9y2P-0R5H-MciwSI0tmqhZh8lIQV45Epr52UPHwa240W7xgOzmE1J/exec";
+<input type="password" id="password" placeholder="Senha">
 
-    function parseJwt(token) {
-      return JSON.parse(atob(token.split('.')[1]));
-    }
+<button onclick="submitForm()" id="btn">
+Entrar
+</button>
 
-    async function handleCredentialResponse(response) {
-      const data = parseJwt(response.credential);
+<div class="switch" onclick="toggleMode()" id="switchText">
+Criar conta
+</div>
 
-      const user = {
-        name: data.name,
-        email: data.email,
-        googleId: data.sub
-      };
+<div class="message" id="message"></div>
 
-      document.getElementById('info').style.display = 'block';
-      document.getElementById('info').innerHTML = `
-        <strong>Nome:</strong> ${user.name}<br>
-        <strong>Email:</strong> ${user.email}
-      `;
+</div>
 
-      try {
-        await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain'
-          },
-          body: JSON.stringify(user)
-        });
+<div class="home" id="home">
 
-        document.getElementById('success').style.display = 'block';
+<div class="logo">X</div>
 
-      } catch (err) {
-        alert('Erro ao enviar para planilha');
-        console.error(err);
+<h1 id="welcome"></h1>
+
+<p>Login realizado com sucesso.</p>
+
+</div>
+
+</div>
+
+<script>
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxv3H6I9O3UrjZ0gjmXvoAoIDeVsFEJaDd7eH3AFS0oinvMmU9LrqguN-k6dYlO9lK-/exec";
+
+let registerMode = false;
+
+function toggleMode(){
+
+  registerMode = !registerMode;
+
+  document.getElementById("username").style.display =
+    registerMode ? "block" : "none";
+
+  document.getElementById("title").innerText =
+    registerMode ? "Criar conta" : "Entrar no X";
+
+  document.getElementById("btn").innerText =
+    registerMode ? "Cadastrar" : "Entrar";
+
+  document.getElementById("switchText").innerText =
+    registerMode ? "Já tenho conta" : "Criar conta";
+
+  document.getElementById("message").innerText = "";
+}
+
+async function submitForm(){
+
+  const username =
+    document.getElementById("username").value;
+
+  const email =
+    document.getElementById("email").value;
+
+  const password =
+    document.getElementById("password").value;
+
+  const payload = {
+    action: registerMode ? "register" : "login",
+    username,
+    email,
+    password
+  };
+
+  try{
+
+    const response = await fetch(SCRIPT_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"text/plain"
+      },
+      body:JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if(data.success){
+
+      if(registerMode){
+
+        document.getElementById("message").innerText =
+          "Conta criada com sucesso";
+
+      }else{
+
+        document.getElementById("auth").style.display =
+          "none";
+
+        document.getElementById("home").style.display =
+          "block";
+
+        document.getElementById("welcome").innerText =
+          "@" + data.username;
       }
+
+    }else{
+
+      document.getElementById("message").innerText =
+        data.message;
     }
-  </script>
+
+  }catch(err){
+
+    document.getElementById("message").innerText =
+      "Erro na conexão";
+
+    console.error(err);
+  }
+}
+
+</script>
 
 </body>
 </html>
