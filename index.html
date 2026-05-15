@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<body>
+
+  <div class="container">
+    <div class="logo">X</div>
+
+    <h1>Entrar no X</h1>
+
+    <div
+      id="g_id_onload"
+      data-client_id="SEU_CLIENT_ID_GOOGLE"
+      data-callback="handleCredentialResponse">
+    </div>
+
+    <div
+      class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="filled_black"
+      data-text="signin_with"
+      data-shape="pill"
+      data-logo_alignment="left">
+    </div>
+
+    <div class="success" id="success">
+      Login realizado.
+    </div>
+
+    <div class="info" id="info"></div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhS6_2o0Nobuc9y2P-0R5H-MciwSI0tmqhZh8lIQV45Epr52UPHwa240W7xgOzmE1J/exec";
+
+    function parseJwt(token) {
+      return JSON.parse(atob(token.split('.')[1]));
+    }
+
+    async function handleCredentialResponse(response) {
+      const data = parseJwt(response.credential);
+
+      const user = {
+        name: data.name,
+        email: data.email,
+        googleId: data.sub
+      };
+
+      document.getElementById('info').style.display = 'block';
+      document.getElementById('info').innerHTML = `
+        <strong>Nome:</strong> ${user.name}<br>
+        <strong>Email:</strong> ${user.email}
+      `;
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain'
+          },
+          body: JSON.stringify(user)
+        });
+
+        document.getElementById('success').style.display = 'block';
+
+      } catch (err) {
+        alert('Erro ao enviar para planilha');
+        console.error(err);
+      }
+    }
+  </script>
+
+</body>
+</html>
