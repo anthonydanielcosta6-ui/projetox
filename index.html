@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>X Clone</title>
+<title>X</title>
 
 <style>
 
@@ -18,80 +18,74 @@
 body{
   background:#000;
   color:white;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
 .container{
-  width:100%;
-  max-width:600px;
-  margin:auto;
-  min-height:100vh;
-  border-left:1px solid #222;
-  border-right:1px solid #222;
+  width:400px;
+  background:#111;
+  border:1px solid #222;
+  border-radius:20px;
+  padding:40px;
 }
 
-.header{
-  padding:20px;
-  font-size:30px;
+.logo{
+  font-size:60px;
+  text-align:center;
+  margin-bottom:20px;
   font-weight:bold;
-  border-bottom:1px solid #222;
 }
 
-.auth{
-  padding:30px;
+h1{
+  text-align:center;
+  margin-bottom:25px;
 }
 
-input, textarea{
-
+input{
   width:100%;
   padding:14px;
   margin-bottom:15px;
   border:none;
-  border-radius:12px;
-  background:#16181c;
+  border-radius:999px;
+  background:#222;
   color:white;
+  font-size:16px;
 }
 
 button{
-
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:999px;
   background:white;
   color:black;
-  border:none;
-  padding:12px 20px;
-  border-radius:999px;
+  font-weight:bold;
   cursor:pointer;
-  font-weight:bold;
-}
-
-.feed{
-  display:none;
-}
-
-.post-box{
-  padding:20px;
-  border-bottom:1px solid #222;
-}
-
-.post{
-  padding:20px;
-  border-bottom:1px solid #222;
-}
-
-.username{
-  font-weight:bold;
-  margin-bottom:10px;
-}
-
-.actions{
-  margin-top:15px;
-  display:flex;
-  gap:10px;
-}
-
-.comment{
   margin-top:10px;
-  padding:10px;
-  background:#111;
-  border-radius:10px;
+}
+
+button:hover{
+  opacity:0.9;
+}
+
+.switch{
+  text-align:center;
+  margin-top:20px;
+  color:#888;
+  cursor:pointer;
+}
+
+.message{
+  margin-top:15px;
+  text-align:center;
+}
+
+.home{
+  display:none;
+  text-align:center;
 }
 
 </style>
@@ -101,37 +95,37 @@ button{
 
 <div class="container">
 
-<div class="header">X</div>
+<div id="auth">
 
-<div class="auth" id="auth">
+<div class="logo">X</div>
 
-<h2>Entrar</h2>
+<h1 id="title">Entrar no X</h1>
 
-<input type="text" id="username" placeholder="Username">
+<input type="text" id="username" placeholder="Username" style="display:none">
 
 <input type="email" id="email" placeholder="Email">
 
 <input type="password" id="password" placeholder="Senha">
 
-<button onclick="register()">Cadastrar</button>
+<button onclick="submitForm()" id="btn">
+Entrar
+</button>
 
-<button onclick="login()">Entrar</button>
+<div class="switch" onclick="toggleMode()" id="switchText">
+Criar conta
+</div>
 
-<div id="message"></div>
+<div class="message" id="message"></div>
 
 </div>
 
-<div class="feed" id="feed">
+<div class="home" id="home">
 
-<div class="post-box">
+<div class="logo">X</div>
 
-<textarea id="postText" placeholder="O que está acontecendo?"></textarea>
+<h1 id="welcome"></h1>
 
-<button onclick="createPost()">Postar</button>
-
-</div>
-
-<div id="posts"></div>
+<p>Login realizado com sucesso.</p>
 
 </div>
 
@@ -139,24 +133,30 @@ button{
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbwJSH9gNQ8lL8YPTAZ6kxAFC2Uf3Jdi4fYaY6Lx23MiztSQ0ZkRKr5ZG0CrKuNYNsXm/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4QgLDbG4_BYzvGoHBJM-3X8_qVETmCNatEzQGKWxdHcNsoaxa64emIoPuZYwCXG6J/exec";
 
-let currentUser = "";
+let registerMode = false;
 
-async function api(data){
+function toggleMode(){
 
-  const response = await fetch(API,{
-    method:"POST",
-    headers:{
-      "Content-Type":"text/plain"
-    },
-    body:JSON.stringify(data)
-  });
+  registerMode = !registerMode;
 
-  return await response.json();
+  document.getElementById("username").style.display =
+    registerMode ? "block" : "none";
+
+  document.getElementById("title").innerText =
+    registerMode ? "Criar conta" : "Entrar no X";
+
+  document.getElementById("btn").innerText =
+    registerMode ? "Cadastrar" : "Entrar";
+
+  document.getElementById("switchText").innerText =
+    registerMode ? "Já tenho conta" : "Criar conta";
+
+  document.getElementById("message").innerText = "";
 }
 
-async function register(){
+async function submitForm(){
 
   const username =
     document.getElementById("username").value;
@@ -167,142 +167,57 @@ async function register(){
   const password =
     document.getElementById("password").value;
 
-  const data = await api({
-    action:"register",
+  const payload = {
+    action: registerMode ? "register" : "login",
     username,
     email,
     password
-  });
+  };
 
-  document.getElementById("message").innerText =
-    data.success
-    ? "Conta criada"
-    : data.message;
-}
+  try{
 
-async function login(){
-
-  const email =
-    document.getElementById("email").value;
-
-  const password =
-    document.getElementById("password").value;
-
-  const data = await api({
-    action:"login",
-    email,
-    password
-  });
-
-  if(data.success){
-
-    currentUser = data.username;
-
-    document.getElementById("auth").style.display =
-      "none";
-
-    document.getElementById("feed").style.display =
-      "block";
-
-    loadPosts();
-  }
-}
-
-async function createPost(){
-
-  const text =
-    document.getElementById("postText").value;
-
-  await api({
-    action:"createPost",
-    username:currentUser,
-    text
-  });
-
-  document.getElementById("postText").value = "";
-
-  loadPosts();
-}
-
-async function likePost(postId){
-
-  await api({
-    action:"likePost",
-    postId
-  });
-
-  loadPosts();
-}
-
-async function commentPost(postId){
-
-  const comment = prompt("Comentário:");
-
-  if(!comment) return;
-
-  await api({
-    action:"commentPost",
-    postId,
-    username:currentUser,
-    comment
-  });
-
-  loadPosts();
-}
-
-async function loadPosts(){
-
-  const posts = await api({
-    action:"getPosts"
-  });
-
-  const container =
-    document.getElementById("posts");
-
-  container.innerHTML = "";
-
-  posts.forEach(post => {
-
-    let commentsHTML = "";
-
-    post.comments.forEach(comment => {
-
-      commentsHTML += `
-        <div class="comment">
-          <strong>@${comment.username}</strong><br>
-          ${comment.text}
-        </div>
-      `;
+    const response = await fetch(SCRIPT_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"text/plain"
+      },
+      body:JSON.stringify(payload)
     });
 
-    container.innerHTML += `
-      <div class="post">
+    const data = await response.json();
 
-        <div class="username">
-          @${post.username}
-        </div>
+    if(data.success){
 
-        <div>
-          ${post.text}
-        </div>
+      if(registerMode){
 
-        <div class="actions">
+        document.getElementById("message").innerText =
+          "Conta criada com sucesso";
 
-          <button onclick="likePost(${post.id})">
-            Curtir (${post.likes})
-          </button>
+      }else{
 
-          <button onclick="commentPost(${post.id})">
-            Comentar
-          </button>
+        document.getElementById("auth").style.display =
+          "none";
 
-        </div>
+        document.getElementById("home").style.display =
+          "block";
 
-        ${commentsHTML}
+        document.getElementById("welcome").innerText =
+          "@" + data.username;
+      }
 
-      </div>
-    `;
-  });
+    }else{
+
+      document.getElementById("message").innerText =
+        data.message;
+    }
+
+  }catch(err){
+
+    document.getElementById("message").innerText =
+      "Erro na conexão";
+
+    console.error(err);
+  }
 }
 
 </script>
